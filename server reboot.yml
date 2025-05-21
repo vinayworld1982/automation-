@@ -1,0 +1,15 @@
+---
+- name: Reboot the server
+  hosts: all  # Specify the host group or individual servers
+  become: yes  # Ensure the playbook runs with elevated privileges
+  tasks:
+    - name: Reboot the server
+      reboot:
+        reboot_timeout: 600  # Timeout to wait for the server to come back online (in seconds)
+        test_command: uptime  # Command to check if the system is back online
+        connect_timeout: 5  # Timeout to wait for connection after the reboot (in seconds)
+      register: reboot_status  # Register the result of the reboot task
+
+    - name: Show reboot status
+      debug:
+        msg: "Reboot successful: {{ reboot_status }}"
