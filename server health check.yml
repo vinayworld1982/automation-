@@ -1,0 +1,49 @@
+---
+- name: Perform health check on Windows Server
+  hosts: windows_servers  # Replace with your host group or specific server
+  gather_facts: yes  # Gather system facts like memory, CPU, etc.
+  tasks:
+    
+    - name: Check CPU Load
+      win_command: wmic cpu get loadpercentage
+      register: cpu_load
+      ignore_errors: yes  # In case the command fails
+
+    - name: Show CPU Load
+      debug:
+        msg: "CPU Load: {{ cpu_load.stdout }}"
+
+    - name: Check Memory Usage
+      win_command: systeminfo | findstr /C:"Available Physical Memory"
+      register: memory_usage
+      ignore_errors: yes  # In case the command fails
+
+    - name: Show Memory Usage
+      debug:
+        msg: "Memory Usage: {{ memory_usage.stdout }}"
+
+    - name: Check Disk Usage (C: Drive)
+      win_disk_facts:
+      register: disk_facts
+
+    - name: Show Disk Usage
+      debug:
+        msg: "Disk Usage on C: Drive: {{ disk_facts.disks[0].free_space }} Free of {{ disk_facts.disks[0].size }}"
+
+    - name: Check Uptime
+      win_command: systeminfo | findstr /C:"System Boot Time"
+      register: uptime
+      ignore_errors: yes
+
+    - name: Show Uptime
+      debug:
+        msg: "System Boot Time: {{ uptime.stdout }}"
+
+    - name: Check if critical service (e.g., Windows Update) is running
+      win_service_facts:
+      register: service_facts
+
+    - name: Ensure Windows Update service is running
+      debug:
+        msg: "Windows Update Service is running: {{ service_facts.services['wuauserv'].state }}"
+      when: service_facts.services['wuauserv'] is defined
